@@ -11,15 +11,16 @@ if len(sys.argv) < 2:
 
 ip_address = sys.argv[1]
 # Open a connection to modem
-modem = UnetGateway(ip_address, 1100)
+modem = UnetSocket(ip_address, 1100)
 
 ################### Transmission of CONTROL and DATA packet ###################
 
-# Look for agents providing physical service
+# Look for agents providing physical service def phy = modem.agentForService Services.PHYSICAL
 phy = modem.agentForService(Services.PHYSICAL)
 
-# Transmit a CONTROL packet
-phy << TxFrameReq(type=Physical.CONTROL, data=np.arange(4))
+# Transmit a CONTROL packet (phy.CONTROL)
+phy << TxFrameReq(type=1, data=np.arange(4))
+
 # Receive the transmit notification
 txntf1 = modem.receive(TxFrameNtf, 5000)
 if txntf1 is not None:
@@ -29,8 +30,8 @@ if txntf1 is not None:
 else:
     print('Transmission not successfull, try again!')
 
-# Transmit a DATA packet
-phy << TxFrameReq(type=Physical.DATA, data=np.arange(10))
+# Transmit a DATA packet (phy.DATA)
+phy << TxFrameReq(type=2, data=np.arange(10))
 # Receive the transmit notification
 txntf2 = modem.receive(TxFrameNtf, 5000)
 if txntf2 is not None:
@@ -68,7 +69,7 @@ else:
 ################### Recording a baseband signal #################################
 
 # Record a baseband signal
-bb << RecordBasebandSignalReq(recLen=24000)
+bb << RecordBasebandSignalReq(recLength=24000)
 # Receive the notification when the signal is recorded
 rxntf = modem.receive(RxBasebandSignalNtf, 5000)
 if rxntf is not None:
@@ -83,16 +84,17 @@ else:
 ################### Transmit and record a signal ##########################
 
 # Load the baseband signal to be transmitted.
-# signal.txt contains a 20 kHz tonal, 5ms long with fs = 192 kHz
-tx_signal = np.genfromtxt('signal.txt', delimiter=',')
+# signal.txt contains the same signal as csig in previous section
+# Format: array with alternate real and imag values
+tx_signal = np.genfromtxt('signals/signal.txt', delimiter=',')
 
 # Transmit the baseband signal
 bb << TxBasebandSignalReq(preamble=3, signal=tx_signal)
 
 txntf4 = modem.receive(TxFrameNtf, 5000)
 if txntf4 is not None:
-    # Request a recording from txTime onwards
-    bb << RecordBasebandSignalReq(recTime=txntf4.txTime, recLen=(len(tx_signal)*2))
+    # Request a recording from txTime onwards for a duration of 2x the original transmitted signal.
+    bb << RecordBasebandSignalReq(recTime=txntf4.txTime, recLength=(len(tx_signal)*2))
 else:
     print('Transmission not successfull, try again!')
 

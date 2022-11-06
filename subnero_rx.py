@@ -16,7 +16,8 @@ from unetpy import *
 # Open connection to the modem
 print("-I- connecting to modem: " + ip_address)
 try:
-    modem = UnetGateway(ip_address, 1100)
+    sock = UnetSocket('192.168.0.11', 1100)
+    modem = sock.getGateway()
 except:
     exit(1)
 
@@ -44,7 +45,7 @@ for i in range(0,number_of_rec):
     bb << RecordBasebandSignalReq(recLen=24000)
 
     # Receive the notification when the signal is recorded
-    rxntf = modem.receive(RxBasebandSignalNtf, 5000)
+    rxntf = modem.receive(RxBasebandSignalNtf, 192000)
     if rxntf is not None:
         # Extract the recorded signal
         rec_signal = rxntf.signal

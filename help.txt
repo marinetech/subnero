@@ -1,0 +1,20 @@
+tell host('A'), 'hello from B!'
+
+trace host('unet-17030955')
+
+range host('unet-17024968')
+
+# Create 0.5 second 10 kHz baseband tonal continuous wave
+cw(10000, 0.5)
+
+# Create 0.2 second 15 kHz passband tonal continuous wave
+cw(15000, 0.2, 0)
+
+# Create 1.5 second baseband chirp (sweep) from 10-12 kHz and put it to variable 's'
+s = sweep(10000, 12000, 1.5)
+
+# Tx 5 times signal (s) with delay of 3 seconds 
+5.times { bbtx s; Thread.sleep(3000) }; 
+
+# Tx infinite signal (s) with delay of 3 seconds 
+while(true){bbtx s; Thread.sleep(3000)}

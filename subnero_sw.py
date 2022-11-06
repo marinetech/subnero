@@ -16,7 +16,8 @@ from unetpy import *
 # Open connection to the modem
 print("-I- connecting to modem: " + ip_address)
 try:
-    modem = UnetGateway(ip_address, 1100)
+    sock = UnetSocket('192.168.0.11', 1100)
+    modem = sock.getGateway()
 except:
     exit(1)
 
@@ -29,7 +30,7 @@ if not os.path.exists(rx_out_folder):
 bb = modem.agentForService(Services.BASEBAND)
 for i in range(0,number_of_loops):
     print("-I- Tx #" + str(i+1))
-    bb << org_arl_unet_bb.TxBasebandSignalReq(signal=signal.tolist(), fc=0, fs=192000)
+    bb << TxBasebandSignalReq(signal=signal.tolist(), fc=0, fs=192000)
 
     txntf4 = modem.receive(TxFrameNtf, 5000)
     if txntf4 is not None:
