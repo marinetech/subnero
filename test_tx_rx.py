@@ -1,5 +1,10 @@
 # Settings
-ip_address = "192.168.0.12"
+# Node 1
+ip_address = "192.168.0.11"
+# 
+# Node 2 
+# ip_address = "192.168.0.11"
+# ip_address = "localhost"
 number_of_loops = 2
 sleep_between_loops = 0
 signal_file = 'PortoVeryShort'
@@ -13,6 +18,7 @@ import arlpy.signal as asig
 import arlpy.plot as plt
 from unetpy import *
 import matplotlib.pyplot as plt1
+rec_length = 0.5
 
 # Open connection to the modem
 print("-I- connecting to modem: " + ip_address)
@@ -30,31 +36,32 @@ while True:
 	# Look for agents poviding baseband service
 	bb = modem.agentForService(Services.BASEBAND)
 	# Load the baseband signal to be transmitted.
-	# signal.txt contains the same signal as csig in previous section
 	# Format: array with alternate real and imag values
 	# tx_signal = np.genfromtxt(signal_file, delimiter=',')
 	fs = 96000
-	fc=24000
+	fc = 24000
+	fd = 24000
 
-	pb_signal = asig.sweep(20000,32000, 0.5, fs)
-	tx_signal=asig.pb2bb(pb_signal,fs,fc,fd=24000,flen=127,cutoff=None)
+	pb_signal = asig.sweep(20000,32000, 0.1, fs)
+	tx_signal= asig.pb2bb(pb_signal,fs,fc,fd=fd,flen=127,cutoff=None)
 
 	# Transmit the baseband signal
-	# rxntf = modem.receive(RxBasebandSignalNtf, 5000)
-	bb << TxBasebandSignalReq(preamble=3, signal=tx_signal,fc=fc)
+	bb << TxBasebandSignalReq(preamble=0, signal=tx_signal,fc=fc)
 
 	# plt.plot(tx_signal, fs=fs)
-	# plt.specgram(tx_signal, fs=fs)
+	# plt.specgram(tx_signal, fs=fs
 
-	txntf = modem.receive(TxFrameNtf, 1500)
+	txntf = modem.receive(TxFrameNtf, 5000)
 	if txntf is not None:
-	    # Request a recording from txTime onwards for a duration of 2x the original transmitted signal.
-	    bb << RecordBasebandSignalReq(recTime=txntf.txTime, recLength=(len(tx_signal)*2))
+	    # Request a recording from txTime onwards for a duration of 2x the original transmitted signal. (len(tx_signal)*2))
+	    print("rec lenght", len(tx_signal)*2)
+	    print("recTime", txntf.txTime)
+	    bb << RecordBasebandSignalReq(recTime=(txntf.txTime+9600), recLength=fd*rec_length)
 	else:
 	    print('Transmission not successfull, try again!')
 
 	# Read the receive notification
-	rxntf = modem.receive(RxBasebandSignalNtf, 1500)
+	rxntf = modem.receive(RxBasebandSignalNtf, 5000)
 	rxntf.fc
 	rxntf.fs
 
@@ -68,8 +75,8 @@ while True:
 	    y = asig.bb2pb(rec_signal, rxntf.fs, rxntf.fc, fs)
 	    # plt.plot(y, fs=fs)
 	    plt.specgram(y, fs=fs)
-	    np.savetxt('rx_signal'+str(count)+'.txt',y)
-	    time.sleep(3)
+	    # np.savetxt('rx_signal'+str(count)+'.txt',y)
+	    time.sleep(1)
 	    count += 1
 
 	else:
